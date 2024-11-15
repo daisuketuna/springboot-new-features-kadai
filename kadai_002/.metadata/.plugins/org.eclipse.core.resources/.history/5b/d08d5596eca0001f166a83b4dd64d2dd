@@ -1,0 +1,14 @@
+package com.example.samuraitravel.controller;
+
+@Controller
+@RequestMapping("/houses/{houseId}/review")
+public class ReviewController {
+	private final ReviewRepository reviewRepository;
+	private final HouseRepository houseRepository;
+	private final ReviewService reviewService;
+	
+	public ReviewController(ReviewRepository reviewRepository,HouseRepository houseRepository,ReviewService reviewService) {
+		this.
+	}
+
+}

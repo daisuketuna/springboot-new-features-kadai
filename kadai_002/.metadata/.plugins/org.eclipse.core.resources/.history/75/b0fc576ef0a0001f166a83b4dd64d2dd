@@ -1,0 +1,14 @@
+package com.example.samuraitravel.form;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class ReviewsRegisterForm {
+	@NotBlank(message = "評価を選択してください。")
+	private Integer starNumber;
+	
+	@NotBlank(message = "コメントを登録してください。")
+	private String customerComment;
+}

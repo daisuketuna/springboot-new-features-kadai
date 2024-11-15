@@ -1,0 +1,17 @@
+package com.example.samuraitravel.service;
+
+public class ReviewsService {
+	private final ReviewsRepository reviewsRepository;
+	
+	//	reviewsRepositoryの依存性を注入
+	public ReviewsService(ReviewsRepository reviewsRepository) {
+		this.reviewsRepository = reviewsRepository;
+	}
+	
+	//レビューを作成	
+	public void reviewsRegister{
+		Reviews reviews = new Reviews;
+		
+	}
+
+}
