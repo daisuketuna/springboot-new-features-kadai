@@ -1,7 +1,8 @@
 package com.example.samuraitravel.controller;
- 
- import org.springframework.data.domain.Page;
+
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -18,112 +19,137 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.samuraitravel.entity.House;
 import com.example.samuraitravel.entity.Review;
 import com.example.samuraitravel.entity.User;
-import com.example.samuraitravel.form.ReviewEditForm;
-import com.example.samuraitravel.form.ReviewRegisterForm;
+import com.example.samuraitravel.form.ReviewForm;
 import com.example.samuraitravel.repository.HouseRepository;
 import com.example.samuraitravel.repository.ReviewRepository;
+import com.example.samuraitravel.repository.UserRepository;
 import com.example.samuraitravel.security.UserDetailsImpl;
 import com.example.samuraitravel.service.ReviewService;
- 
- @Controller
- @RequestMapping("/houses/{houseId}/review")
- public class ReviewController {
-     private final ReviewRepository reviewRepository;
-     private final HouseRepository houseRepository; 
-     private final ReviewService reviewService; 
-     
-     public ReviewController(ReviewRepository reviewRepository, HouseRepository houseRepository, ReviewService reviewService) {        
-         this.reviewRepository = reviewRepository;
-         this.houseRepository = houseRepository;
-         this.reviewService = reviewService;
-     }     
-     
-     @GetMapping
-     public String index(@PathVariable(name = "houseId") Integer houseId, @PageableDefault(page = 0, size = 10, sort = "id") Pageable pageable, Model model) {
-         House house = houseRepository.getReferenceById(houseId);
-         Page<Review> reviewPage = reviewRepository.findByHouseOrderByCreatedAtDesc(house, pageable);       
-                     
-         model.addAttribute("house", house); 
-         model.addAttribute("reviewPage", reviewPage);                
-         
-         return "review/index";
-     }    
-     
-     @GetMapping("/register")
-     public String register(@PathVariable(name = "houseId") Integer houseId, Model model) { 
-         House house = houseRepository.getReferenceById(houseId);
-         
-         model.addAttribute("house", house);
-         model.addAttribute("reviewRegisterForm", new ReviewRegisterForm());
-         
-         return "review/register";
-     }
-     
-     @PostMapping("/create")
-     public String create(@PathVariable(name = "houseId") Integer houseId,
-                          @AuthenticationPrincipal UserDetailsImpl userDetailsImpl,
-                          @ModelAttribute @Validated ReviewRegisterForm reviewRegisterForm,
-                          BindingResult bindingResult,
-                          RedirectAttributes redirectAttributes,
-                          Model model)
-     {    
-         House house = houseRepository.getReferenceById(houseId);
-         User user = userDetailsImpl.getUser();
-         
-         if (bindingResult.hasErrors()) {
-             model.addAttribute("house", house);
-             return "review/register";
-         }        
-         
-         reviewService.create(house, user, reviewRegisterForm);
-         redirectAttributes.addFlashAttribute("successMessage", "レビューを投稿しました。");    
-         
-         return "redirect:/houses/{houseId}";
-     }   
-     
-     @GetMapping("/{reviewId}/edit")
-     public String edit(@PathVariable(name = "houseId") Integer houseId, @PathVariable(name = "reviewId") Integer reviewId, Model model) {
-         House house = houseRepository.getReferenceById(houseId);
-         Review review = reviewRepository.getReferenceById(reviewId);
-         
-         ReviewEditForm reviewEditForm = new ReviewEditForm(review.getId(), review.getScore(), review.getContent());
-         
-         model.addAttribute("house", house);
-         model.addAttribute("review", review);
-         model.addAttribute("reviewEditForm", reviewEditForm);
-         
-         return "review/edit";
-     } 
-     
-     @PostMapping("/{reviewId}/update")
-     public String update(@PathVariable(name = "houseId") Integer houseId,
-                          @PathVariable(name = "reviewId") Integer reviewId,
-                          @ModelAttribute @Validated ReviewEditForm reviewEditForm,
-                          BindingResult bindingResult,
-                          RedirectAttributes redirectAttributes,
-                          Model model) 
-     {    
-         House house = houseRepository.getReferenceById(houseId);
-         Review review = reviewRepository.getReferenceById(reviewId);
-         
-         if (bindingResult.hasErrors()) {
-             model.addAttribute("house", house);
-             model.addAttribute("review", review);
-             return "review/edit";
-         }
-         
-         reviewService.update(reviewEditForm);
-         redirectAttributes.addFlashAttribute("successMessage", "レビューを編集しました。");
-         
-         return "redirect:/houses/{houseId}";
-     }    
-     
-     @PostMapping("/{reviewId}/delete")
-     public String delete(@PathVariable(name = "reviewId") Integer reviewId, RedirectAttributes redirectAttributes) {        
-         reviewRepository.deleteById(reviewId);
-                 
-         redirectAttributes.addFlashAttribute("successMessage", "レビューを削除しました。");
-         
-         return "redirect:/houses/{houseId}";
-     }    
- }
+
+
+
+
+@Controller
+@RequestMapping("/review")
+public class ReviewController {
+	
+	private final ReviewService reviewService;
+	private final HouseRepository houseRepository;
+	private final UserRepository userRepository;
+	private final ReviewRepository reviewRepository;
+	
+	
+
+	public ReviewController(ReviewService reviewService,HouseRepository houseRepository,UserRepository userRepository,ReviewRepository reviewRepository)
+	{
+		
+		this.houseRepository=houseRepository;
+		this.reviewService=reviewService;
+		this.userRepository=userRepository;
+		this.reviewRepository=reviewRepository;
+	}
+	
+
+//  houses/show.htmlのボタンから
+//	登録フォーム
+	@GetMapping("create/{id}")
+	public String create(@PathVariable(name="id")Integer id,Model model,@AuthenticationPrincipal  UserDetailsImpl userDetailsImp1)
+	{
+		
+		House house=houseRepository.getReferenceById(id);
+		model.addAttribute("house",house);
+		 User user=userRepository.getReferenceById(userDetailsImp1.getUser().getId());
+		ReviewForm reviewForm=new ReviewForm(null,user.getId(), house.getId(), null, null);
+		System.out.println(reviewForm);
+
+		System.out.println("ready");
+		model.addAttribute("reviewForm",reviewForm);
+		
+		return "/review/create";
+	}
+	
+	@GetMapping("edit/{id}")
+	public String edit(@PathVariable(name="id")Integer id,Model model)
+	{
+		
+		Review review=reviewRepository.getReferenceById(id);
+		
+		
+		
+		ReviewForm reviewForm=new ReviewForm(review.getId(),review.getUser().getId(), review.getHouse().getId(), review.getStarNum(), review.getPostedComment());
+		System.out.println(reviewForm);
+		model.addAttribute("reviewForm",reviewForm);
+		model.addAttribute("house",review.getHouse());
+		
+		return "/review/edit";
+	}
+	
+
+
+	
+//	登録ポスト
+	@PostMapping("create/{id}/register")
+	public String registerCreate(@PathVariable(name="id") Integer id, @ModelAttribute @Validated ReviewForm reviewForm,BindingResult bindingResult, RedirectAttributes redirectAttributes,Model model)
+	{
+		
+		System.out.println("create");
+		
+		if(bindingResult.hasErrors())
+		{
+			redirectAttributes.addFlashAttribute("errorMessage","コメント欄が未記入です");
+
+			return "redirect:/review/create/"+id;
+		}
+		
+		
+		reviewService.createReview(reviewForm);
+		redirectAttributes.addFlashAttribute("successMessage","レビューが正常に登録されました");
+		
+		return "redirect:/review/show/{id}";
+	}
+	
+//	登録ポスト
+	@PostMapping("edit/{id}/register")
+	public String registerEdit (@PathVariable(name="id") Integer id,@ModelAttribute @Validated ReviewForm reviewForm,BindingResult bindingResult, RedirectAttributes redirectAttributes,Model model)
+	{
+		
+		System.out.println("edit");
+		
+		if(bindingResult.hasErrors())
+		{
+			redirectAttributes.addFlashAttribute("errorMessage","コメント欄が未記入です");
+
+			return "redirect:/review/edit/"+id;
+		}
+		System.out.println(reviewForm.getUserId());
+		reviewService.updateReview(reviewForm);
+		redirectAttributes.addFlashAttribute("successMessage","レビューが正常に編集されました");
+		
+		return "redirect:/review/show/"+reviewForm.getHouseId();
+	}
+	
+//	コメント詳細
+	@GetMapping("/show/{id}")
+	public String show(@PathVariable(name="id")Integer id,Model model,@PageableDefault(page=0,size=10,sort="id",direction = Direction.ASC)Pageable pageable,@AuthenticationPrincipal  UserDetailsImpl userDetailsImp1)
+	{
+		House house=houseRepository.getReferenceById(id);
+		Page<Review> reviewPage=reviewRepository.findAllByHouse(houseRepository.getReferenceById(id),pageable);
+		model.addAttribute("reviewPage", reviewPage);
+		model.addAttribute("house",house);
+		
+		return "/review/show";
+	}
+	
+//	レビューモーダル削除
+	 @PostMapping("/{id}/{houseId}/delete")
+	    
+	    public String delete(@PathVariable(name="id")Integer id,@PathVariable(name="houseId")Integer houseId,RedirectAttributes redirectAttributes)
+	    {
+	    	reviewRepository.deleteById(id);
+	    
+	    	redirectAttributes.addFlashAttribute("succesMessage","民宿を削除しました");
+	    	return "redirect:/houses/{houseId}";
+	    	
+	    }
+	
+}

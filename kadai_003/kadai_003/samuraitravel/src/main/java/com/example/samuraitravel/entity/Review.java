@@ -1,5 +1,8 @@
 package com.example.samuraitravel.entity;
 
+
+
+
 import java.sql.Timestamp;
 
 import jakarta.persistence.Column;
@@ -16,33 +19,27 @@ import lombok.Data;
 @Table(name="reviews")
 @Data
 public class Review {
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
+	@Column(name="id")
 	private Integer id;
 	
 	@ManyToOne
-	@JoinColumn(name = "house_id")
-	private House house;
-	
-	@ManyToOne
-	@JoinColumn(name = "user_id")
+	@JoinColumn(name="user_id")
 	private User user;
 	
-	@Column(name="content")
-	private String content;
+	@ManyToOne
+	@JoinColumn(name="house_id")
+	private House house;
 	
-	@Column(name ="score")
-	private Integer score;
+	@Column(name="star_num")
+	private Integer starNum;
 	
+	@Column(name="posted_comment")
+	private String postedComment;
 	
-	@Column(name = "created_at", insertable = false, updatable = false)
-	private Timestamp createdAt;
+	 @Column(name = "created_at")
+	 private Timestamp createdAt;
+}
 	 
-	@Column(name = "updated_at", insertable = false, updatable = false)
-	private Timestamp updatedAt;
-
-	
-
-	
-	}
